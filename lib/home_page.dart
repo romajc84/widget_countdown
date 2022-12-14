@@ -144,3 +144,46 @@ class TimerModel extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+// class TimerModel extends ChangeNotifier {
+//   int _time = 0;
+//   Ticker? _ticker;
+//   int _duration = 1800;
+
+//   int get currentTime => _duration - _time;
+
+//   int get duration => _duration;
+
+//   void setDuration(double newDuration) {
+//     _duration = newDuration.toInt();
+//     reset();
+//     notifyListeners();
+//   }
+
+//   void start() {
+//     if (_ticker != null && _ticker!.isActive) {
+//       return;
+//     }
+
+//     _ticker = Ticker((Duration elapsed) {
+//       if (_time < _duration) {
+//         _time++;
+//         notifyListeners();
+//       } else {
+//         _ticker?.stop();
+//         reset();
+//       }
+//     });
+//     _ticker?.start();
+//   }
+
+//   void pause() {
+//     _ticker?.stop();
+//   }
+
+//   void reset() {
+//     _time = 0;
+//     pause();
+//     notifyListeners();
+//   }
+// }

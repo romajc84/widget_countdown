@@ -1,6 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'bloc/timer_bloc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: BlocProvider(
+        create: (context) => TimerBloc(),
+        child: HomePage(),
+      ),
     );
   }
 }
@@ -24,7 +28,6 @@ class MyApp extends StatelessWidget {
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
-  final _timerModel = TimerModel();
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +56,8 @@ class HomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AnimatedBuilder(
-                  animation: _timerModel,
-                  builder: (context, child) {
+                BlocBuilder<TimerBloc, TimerState>(
+                  builder: (context, state) {
                     return Text(
                       '${(_timerModel.currentTime / 60).floor()}:${(_timerModel.currentTime % 60).toString().padLeft(2, '0')}',
                       style: Theme.of(context).textTheme.headline4,
@@ -63,9 +65,8 @@ class HomePage extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 20),
-                AnimatedBuilder(
-                    animation: _timerModel,
-                    builder: (context, child) {
+                BlocBuilder<TimerBloc, TimerState>(
+                    builder: (context, state) {
                       return Slider(
                         value: (_timerModel.currentTime).toDouble(),
                         min: 0,
@@ -79,7 +80,8 @@ class HomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: _timerModel.start,
+                      // onPressed: _timerModel.start,
+                      onPressed: () => context.read<TimerBloc>().add(TimerStart()),
                       child: const Text('Start'),
                     ),
                     const SizedBox(width: 10),
@@ -100,47 +102,5 @@ class HomePage extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class TimerModel extends ChangeNotifier {
-  int _time = 0;
-  Timer? _timer;
-  int _duration = 1800;
-
-  int get currentTime => _duration - _time;
-
-  int get duration => _duration;
-
-  void setDuration(double newDuration) {
-    _duration = newDuration.toInt();
-    reset();
-    notifyListeners();
-  }
-
-  void start() {
-    if (_timer != null && _timer!.isActive) {
-      return;
-    }
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_time < _duration) {
-        _time++;
-        notifyListeners();
-      } else {
-        _timer?.cancel();
-        reset();
-      }
-    });
-  }
-
-  void pause() {
-    _timer?.cancel();
-  }
-
-  void reset() {
-    _time = 0;
-    pause();
-    notifyListeners();
   }
 }
