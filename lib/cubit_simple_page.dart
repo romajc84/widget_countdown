@@ -140,7 +140,7 @@ class HomePage extends StatelessWidget {
 }
 
 class TimerCubit extends HydratedCubit<int> {
-  int _time = 0;
+  // final int _time = 0;
   Timer? _timer;
   int _duration = 1800;
 
@@ -148,6 +148,7 @@ class TimerCubit extends HydratedCubit<int> {
 
   void setDuration(double newDuration) {
     _duration = newDuration.toInt();
+    emit(newDuration.toInt());
     reset();
   }
 
@@ -157,9 +158,8 @@ class TimerCubit extends HydratedCubit<int> {
     }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_time < _duration) {
-        _time++;
-        emit(_duration - _time);
+      if (state > 0) {
+        emit(state - 1);
       } else {
         _timer?.cancel();
         reset();
@@ -173,17 +173,16 @@ class TimerCubit extends HydratedCubit<int> {
 
   void reset() {
     pause();
-    _time = 0;
-    emit(_duration - _time);
+    emit(_duration);
   }
 
   @override
   int fromJson(Map<String, dynamic> json) {
-    return json['currentTime'] as int;
+    return json['state'] as int;
   }
 
   @override
   Map<String, dynamic> toJson(int state) {
-    return {'currentTime': state};
+    return {'state': state};
   }
 }
