@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -141,81 +140,25 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class TimerState extends Equatable {
-  final int time;
-  final int duration;
-  final int currentTime;
+// STATE
+abstract class TimerState {}
 
-  const TimerState(this.time, this.duration, this.currentTime);
+class TimerInitial extends TimerState {}
 
-  @override
-  List<Object> get props => [time, duration, currentTime];
+class TimerRunning extends TimerState {}
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'time': time,
-      'duration': duration,
-      'currentTime': currentTime,
-    };
-  }
+class TimerPaused extends TimerState {}
 
-  factory TimerState.fromMap(Map<String, dynamic> map) {
-    return TimerState(
-      map['time'] as int,
-      map['duration'] as int,
-      map['currentTime'] as int,
-    );
-  }
-}
+// EVENT
+abstract class TimerEvent {}
 
-class TimerCubit extends HydratedCubit<TimerState> {
-  Timer? _timer;
+class TimerStart extends TimerEvent {}
 
-  TimerCubit() : super(const TimerState(1, 1800, 1800));
+class TimerPause extends TimerEvent {}
 
-  void setDuration(double newDuration) {
-    emit(TimerState(0, newDuration.toInt(), newDuration.toInt()));
-    reset();
-  }
+class TimerReset extends TimerEvent {}
 
-  void start() {
-    if (_timer != null && _timer!.isActive) {
-      return;
-    }
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      int time = state.time;
-      int duration = state.duration;
-      int currentTime = duration - time;
-      if (time < duration) {
-        time++;
-        emit(TimerState(time, duration, currentTime));
-      } else {
-        _timer?.cancel();
-        reset();
-      }
-    });
-  }
-
-  void pause() {
-    _timer?.cancel();
-  }
-
-  void reset() {
-    int time = 1;
-    int duration = state.duration;
-    int currentTime = state.duration;
-    pause();
-    emit(TimerState(time, duration, currentTime));
-  }
-
-  @override
-  TimerState? fromJson(Map<String, dynamic> json) {
-    return TimerState.fromMap(json);
-  }
-
-  @override
-  Map<String, dynamic>? toJson(TimerState state) {
-    return state.toMap();
-  }
+// BLOC
+class TimerBloc extends Bloc<TimerEvent, TimerState> {
+  
 }

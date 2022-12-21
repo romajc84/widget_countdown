@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
@@ -141,41 +142,39 @@ class HomePage extends StatelessWidget {
 }
 
 class TimerState extends Equatable {
-  final int currentTime;
+  final int time;
   final int duration;
+  final int currentTime;
 
-  const TimerState({
-    required this.currentTime,
-    required this.duration,
-  });
+  const TimerState(this.time, this.duration, this.currentTime);
+
+  @override
+  List<Object> get props => [time, duration, currentTime];
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'currentTime': currentTime,
+      'time': time,
       'duration': duration,
+      'currentTime': currentTime,
     };
   }
 
   factory TimerState.fromMap(Map<String, dynamic> map) {
     return TimerState(
-      currentTime: map['currentTime'] as int,
-      duration: map['duration'] as int,
+      map['time'] as int,
+      map['duration'] as int,
+      map['currentTime'] as int,
     );
   }
-
-  @override
-  List<Object> get props => [currentTime, duration];
 }
 
 class TimerCubit extends HydratedCubit<TimerState> {
-  int _time = 0;
   Timer? _timer;
-  int _duration = 1800;
 
-  TimerCubit() : super(const TimerState(currentTime: 1800, duration: 1800));
+  TimerCubit() : super(const TimerState(1, 1800, 1800));
 
   void setDuration(double newDuration) {
-    _duration = newDuration.toInt();
+    emit(TimerState(0, newDuration.toInt(), newDuration.toInt()));
     reset();
   }
 
@@ -185,9 +184,12 @@ class TimerCubit extends HydratedCubit<TimerState> {
     }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_time < _duration) {
-        _time++;
-        emit(TimerState(currentTime: _duration - _time, duration: _duration));
+      int time = state.time;
+      int duration = state.duration;
+      int currentTime = duration - time;
+      if (time < duration) {
+        time++;
+        emit(TimerState(time, duration, currentTime));
       } else {
         _timer?.cancel();
         reset();
@@ -200,9 +202,11 @@ class TimerCubit extends HydratedCubit<TimerState> {
   }
 
   void reset() {
-    _time = 0;
+    int time = 1;
+    int duration = state.duration;
+    int currentTime = state.duration;
     pause();
-    emit(TimerState(currentTime: _duration - _time, duration: _duration));
+    emit(TimerState(time, duration, currentTime));
   }
 
   @override
