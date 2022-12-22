@@ -39,7 +39,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
   void _onChanged(TimerChanged event, Emitter<TimerState> emit) {
     _tickerSubscription?.cancel();
-    emit(const TimerInitial(_duration));
+    emit(TimerInitial(event.duration));
   }
 
   void _onStarted(TimerStarted event, Emitter<TimerState> emit) {

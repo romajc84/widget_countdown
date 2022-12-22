@@ -1,6 +1,6 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -112,24 +112,36 @@ class HomePage extends StatelessWidget {
                       }));
                 }),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => context.read<TimerCubit>().start(),
-                      child: const Text('Start'),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () => context.read<TimerCubit>().pause(),
-                      child: const Text('Pause'),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () => context.read<TimerCubit>().reset(),
-                      child: const Text('Reset'),
-                    ),
-                  ],
+                BlocBuilder<TimerCubit, TimerState>(
+                  builder: (context, state) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (state.running == false) ...[
+                          ElevatedButton(
+                            onPressed: () => context.read<TimerCubit>().start(),
+                            child: const Text('Start'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () => context.read<TimerCubit>().reset(),
+                            child: const Text('Reset'),
+                          ),
+                        ],
+                        if (state.running == true) ...[
+                          ElevatedButton(
+                            onPressed: () => context.read<TimerCubit>().pause(),
+                            child: const Text('Pause'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () => context.read<TimerCubit>().reset(),
+                            child: const Text('Reset'),
+                          ),
+                        ]
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -140,25 +152,87 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// STATE
-abstract class TimerState {}
+class TimerState extends Equatable {
+  final int time;
+  final int duration;
+  final int currentTime;
+  final bool running;
 
-class TimerInitial extends TimerState {}
+  const TimerState(this.time, this.duration, this.currentTime, this.running);
 
-class TimerRunning extends TimerState {}
+  @override
+  List<Object> get props => [time, duration, currentTime];
 
-class TimerPaused extends TimerState {}
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'time': time,
+      'duration': duration,
+      'currentTime': currentTime,
+    };
+  }
 
-// EVENT
-abstract class TimerEvent {}
+  factory TimerState.fromMap(Map<String, dynamic> map) {
+    return TimerState(
+      map['time'] as int,
+      map['duration'] as int,
+      map['currentTime'] as int,
+      map['running'] as bool,
+    );
+  }
+}
 
-class TimerStart extends TimerEvent {}
+class TimerCubit extends HydratedCubit<TimerState> {
+  Timer? _timer;
 
-class TimerPause extends TimerEvent {}
+  TimerCubit() : super(const TimerState(1, 1800, 1800, false));
 
-class TimerReset extends TimerEvent {}
+  void setDuration(double newDuration) {
+    emit(TimerState(0, newDuration.toInt(), newDuration.toInt(), false));
+    reset();
+  }
 
-// BLOC
-class TimerBloc extends Bloc<TimerEvent, TimerState> {
-  
+  void start() {
+    if (_timer != null && _timer!.isActive) {
+      return;
+    }
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      int time = state.time;
+      int duration = state.duration;
+      int currentTime = duration - time;
+      if (time < duration) {
+        time++;
+        emit(TimerState(time, duration, currentTime, true));
+      } else {
+        _timer?.cancel();
+        reset();
+      }
+    });
+  }
+
+  void pause() {
+    int time = state.time;
+    int duration = state.duration;
+    int currentTime = duration - time;
+    _timer?.cancel();
+    emit(TimerState(time, duration, currentTime, false));
+  }
+
+  void reset() {
+    int time = 1;
+    int duration = state.duration;
+    int currentTime = state.duration;
+    pause();
+    emit(TimerState(time, duration, currentTime, false));
+  }
+
+  @override
+  TimerState? fromJson(Map<String, dynamic> json) {
+    return TimerState.fromMap(json);
+  }
+
+  @override
+  Map<String, dynamic>? toJson(TimerState state) {
+    return state.toMap();
+  }
 }
