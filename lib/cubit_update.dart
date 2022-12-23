@@ -117,7 +117,15 @@ class HomePage extends StatelessWidget {
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (state.running == false) ...[
+                        if (state.running == false &&
+                            state.duration == state.currentTime) ...[
+                          ElevatedButton(
+                            onPressed: () => context.read<TimerCubit>().start(),
+                            child: const Text('Start'),
+                          ),
+                        ],
+                        if (state.running == false &&
+                            state.duration != state.currentTime) ...[
                           ElevatedButton(
                             onPressed: () => context.read<TimerCubit>().start(),
                             child: const Text('Start'),
@@ -161,13 +169,14 @@ class TimerState extends Equatable {
   const TimerState(this.time, this.duration, this.currentTime, this.running);
 
   @override
-  List<Object> get props => [time, duration, currentTime];
+  List<Object> get props => [time, duration, currentTime, running];
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'time': time,
       'duration': duration,
       'currentTime': currentTime,
+      'running': running,
     };
   }
 
