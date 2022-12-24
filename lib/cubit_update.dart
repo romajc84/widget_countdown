@@ -89,65 +89,89 @@ class HomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               color: Colors.grey[100],
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                BlocBuilder<TimerCubit, TimerState>(
-                  builder: (context, state) {
-                    return Text(
-                      '${(state.currentTime / 60).floor()}:${(state.currentTime % 60).toString().padLeft(2, '0')}',
-                      style: Theme.of(context).textTheme.headline4,
-                    );
-                  },
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    BlocBuilder<TimerCubit, TimerState>(
+                      builder: (context, state) {
+                        return Text(
+                          '${(state.currentTime / 60).floor()}:${(state.currentTime % 60).toString().padLeft(2, '0')}',
+                          style: Theme.of(context).textTheme.headline4,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                    BlocBuilder<TimerCubit, TimerState>(
+                      builder: (context, state) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (state.running == false &&
+                                state.duration == state.currentTime) ...[
+                              ElevatedButton(
+                                onPressed: () =>
+                                    context.read<TimerCubit>().start(),
+                                child: const Text('Start'),
+                              ),
+                            ],
+                            if (state.running == false &&
+                                state.duration != state.currentTime) ...[
+                              ElevatedButton(
+                                onPressed: () =>
+                                    context.read<TimerCubit>().start(),
+                                child: const Text('Start'),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () =>
+                                    context.read<TimerCubit>().reset(),
+                                child: const Text('Reset'),
+                              ),
+                            ],
+                            if (state.running == true) ...[
+                              ElevatedButton(
+                                onPressed: () =>
+                                    context.read<TimerCubit>().pause(),
+                                child: const Text('Pause'),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () =>
+                                    context.read<TimerCubit>().reset(),
+                                child: const Text('Reset'),
+                              ),
+                            ]
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                BlocBuilder<TimerCubit, TimerState>(builder: (context, state) {
-                  return Slider(
-                      value: (state.currentTime).toDouble(),
-                      min: 0,
-                      max: 3600,
-                      divisions: 60,
-                      onChanged: ((value) {
-                        BlocProvider.of<TimerCubit>(context).setDuration(value);
-                      }));
-                }),
-                const SizedBox(height: 20),
                 BlocBuilder<TimerCubit, TimerState>(
                   builder: (context, state) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (state.running == false &&
-                            state.duration == state.currentTime) ...[
-                          ElevatedButton(
-                            onPressed: () => context.read<TimerCubit>().start(),
-                            child: const Text('Start'),
-                          ),
-                        ],
-                        if (state.running == false &&
-                            state.duration != state.currentTime) ...[
-                          ElevatedButton(
-                            onPressed: () => context.read<TimerCubit>().start(),
-                            child: const Text('Start'),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton(
-                            onPressed: () => context.read<TimerCubit>().reset(),
-                            child: const Text('Reset'),
-                          ),
-                        ],
-                        if (state.running == true) ...[
-                          ElevatedButton(
-                            onPressed: () => context.read<TimerCubit>().pause(),
-                            child: const Text('Pause'),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton(
-                            onPressed: () => context.read<TimerCubit>().reset(),
-                            child: const Text('Reset'),
-                          ),
-                        ]
-                      ],
+                    return RotatedBox(
+                      quarterTurns: 3,
+                      child: SliderTheme(
+                        data: const SliderThemeData(
+                          trackHeight: 20,
+                          thumbColor: Colors.white,
+                          thumbShape:
+                              RoundSliderThumbShape(enabledThumbRadius: 14),
+                        ),
+                        child: Slider(
+                          value: (state.currentTime).toDouble(),
+                          min: 0,
+                          max: 3600,
+                          divisions: 60,
+                          onChanged: (value) =>
+                              BlocProvider.of<TimerCubit>(context)
+                                  .setDuration(value),
+                        ),
+                      ),
                     );
                   },
                 ),
