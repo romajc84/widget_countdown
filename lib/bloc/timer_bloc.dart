@@ -1,79 +1,59 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'timer_event.dart';
 part 'timer_state.dart';
 
-class Ticker {
-  const Ticker();
-  Stream<int> tick({required int ticks}) {
-    return Stream.periodic(const Duration(seconds: 1), (x) => ticks - x - 1)
-        .take(ticks);
-  }
-}
-
 class TimerBloc extends Bloc<TimerEvent, TimerState> {
-  TimerBloc({required Ticker ticker})
-      : _ticker = ticker,
-        super(const TimerInitial(_duration)) {
-    on<TimerChanged>(_onChanged);
-    on<TimerStarted>(_onStarted);
-    on<TimerPaused>(_onPaused);
-    on<TimerResumed>(_onResumed);
-    on<TimerReset>(_onReset);
-    on<_TimerTicked>(_onTicked);
+  TimerBloc(this._sliderDuration) : super(TimerInitial(1800)) {
+    on<TimerStart>(_onTimerStart);
+    on<TimerPause>(_onTimerPause);
+    on<TimerReset>(_onTimerReset);
+    on<TimerTick>(_onTimerTick);
+    on<TimerSetDuration>(_onTimerSetDuration);
   }
 
-  final Ticker _ticker;
-  static const int _duration = 1800;
+  late Timer _timer;
+  int _sliderDuration;
 
-  StreamSubscription<int>? _tickerSubscription;
-
-  @override
-  Future<void> close() {
-    _tickerSubscription?.cancel();
-    return super.close();
+  void _onTimerStart(TimerStart event, Emitter<TimerState> emit) {
+    emit(TimerRunning(state.duration));
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (Timer timer) {
+        if (state.duration < 1) {
+          timer.cancel();
+          add(TimerReset());
+        } else {
+          add(TimerTick());
+        }
+      },
+    );
   }
 
-  void _onChanged(TimerChanged event, Emitter<TimerState> emit) {
-    _tickerSubscription?.cancel();
+  void _onTimerPause(TimerPause event, Emitter<TimerState> emit) {
+    _timer.cancel();
+    emit(TimerPaused(state.duration));
+  }
+
+  void _onTimerReset(TimerReset event, Emitter<TimerState> emit) {
+    _timer.cancel();
+    emit(TimerInitial(_sliderDuration));
+  }
+
+  void _onTimerTick(TimerTick event, Emitter<TimerState> emit) {
+    emit(TimerRunning(state.duration - 1));
+  }
+
+  void _onTimerSetDuration(TimerSetDuration event, Emitter<TimerState> emit) {
+    _sliderDuration = event.duration;
     emit(TimerInitial(event.duration));
   }
 
-  void _onStarted(TimerStarted event, Emitter<TimerState> emit) {
-    emit(TimerRunInProgress(event.duration));
-    _tickerSubscription?.cancel();
-    _tickerSubscription = _ticker
-        .tick(ticks: event.duration)
-        .listen((duration) => add(_TimerTicked(duration: duration)));
-  }
-
-  void _onPaused(TimerPaused event, Emitter<TimerState> emit) {
-    if (state is TimerRunInProgress) {
-      _tickerSubscription?.pause();
-      emit(TimerRunPause(state.duration));
-    }
-  }
-
-  void _onResumed(TimerResumed resume, Emitter<TimerState> emit) {
-    if (state is TimerRunPause) {
-      _tickerSubscription?.resume();
-      emit(TimerRunInProgress(state.duration));
-    }
-  }
-
-  void _onReset(TimerReset event, Emitter<TimerState> emit) {
-    _tickerSubscription?.cancel();
-    emit(const TimerInitial(_duration));
-  }
-
-  void _onTicked(_TimerTicked event, Emitter<TimerState> emit) {
-    emit(
-      event.duration > 0
-          ? TimerRunInProgress(event.duration)
-          : const TimerRunComplete(),
-    );
+  @override
+  Future<void> close() {
+    _timer.cancel();
+    return super.close();
   }
 }
