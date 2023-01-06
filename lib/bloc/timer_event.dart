@@ -1,32 +1,19 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 part of 'timer_bloc.dart';
 
-abstract class TimerEvent {
-  const TimerEvent();
-}
+abstract class TimerEvent {}
 
-class TimerChanged extends TimerEvent {
-  const TimerChanged({required this.duration});
-  final int duration;
-}
+class TimerStart extends TimerEvent {}
 
-class TimerStarted extends TimerEvent {
-  const TimerStarted({required this.duration});
-  final int duration;
-}
+class TimerPause extends TimerEvent {}
 
-class TimerPaused extends TimerEvent {
-  const TimerPaused();
-}
+class TimerReset extends TimerEvent {}
 
-class TimerResumed extends TimerEvent {
-  const TimerResumed();
-}
+class TimerTick extends TimerEvent {}
 
-class TimerReset extends TimerEvent {
-  const TimerReset();
-}
-
-class _TimerTicked extends TimerEvent {
-  const _TimerTicked({required this.duration});
-  final int duration;
+class TimerSetDuration extends TimerEvent {
+  int duration;
+  TimerSetDuration({
+    required this.duration,
+  });
 }
